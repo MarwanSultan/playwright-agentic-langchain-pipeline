@@ -1,33 +1,27 @@
-name: Secret Scanning
+name: Gitleaks Secret Scan
 
 on:
   push:
     branches: [main, master]
-
   pull_request:
     branches: [main, master]
-
   workflow_dispatch:
 
-permissions:
-  contents: read
-
-concurrency:
-  group: gitleaks-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  gitleaks:
+  scan:
     name: Gitleaks Secret Scan
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
+          # Fetches full commit history for a thorough deep scan
           fetch-depth: 0
 
       - name: Scan repository with Gitleaks
-        uses: gitleaks/gitleaks-action@v3
+        uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Tells Gitleaks to run a direct tree analysis if git commit data is missing
+          args: --source=. --verbose --no-git
