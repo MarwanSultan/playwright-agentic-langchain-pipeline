@@ -3,6 +3,7 @@ export type EnvironmentName = 'local' | 'ci' | 'staging' | 'test';
 export interface RuntimeConfig {
   baseUrl: string;
   apiBaseUrl: string;
+  irsBaseUrl: string;
   environment: EnvironmentName;
   isCi: boolean;
   headless: boolean;
@@ -14,6 +15,7 @@ export interface RuntimeConfig {
 }
 
 const DEFAULT_BASE_URL = 'https://www.va.gov';
+const DEFAULT_IRS_BASE_URL = 'https://www.irs.gov';
 
 function parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
   if (value === undefined) return defaultValue;
@@ -58,6 +60,7 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtime
   const isCi = parseBoolean(env.CI, false);
   const baseUrl = parseUrl('BASE_URL', env.BASE_URL ?? DEFAULT_BASE_URL);
   const apiBaseUrl = parseUrl('API_BASE_URL', env.API_BASE_URL ?? baseUrl);
+  const irsBaseUrl = parseUrl('IRS_BASE_URL', env.IRS_BASE_URL ?? DEFAULT_IRS_BASE_URL);
   const shardIndex = parsePositiveInteger('SHARD_INDEX', env.SHARD_INDEX);
   const shardTotal = parsePositiveInteger('SHARD_TOTAL', env.SHARD_TOTAL);
 
@@ -71,6 +74,7 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtime
   return {
     baseUrl,
     apiBaseUrl,
+    irsBaseUrl,
     environment: parseEnvironment(env.ENVIRONMENT, isCi),
     isCi,
     headless: parseBoolean(env.HEADLESS, true),

@@ -17,6 +17,7 @@ concurrency:
 
 env:
   NODE_VERSION: 22.14.0
+  ACT: false
 
 jobs:
   quality:
@@ -27,6 +28,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -53,7 +56,7 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Upload unit results
-        if: ${{ !cancelled() && !env.ACT }}
+        if: ${{ !cancelled() && env.ACT != 'true' }}
         uses: actions/upload-artifact@v5
         with:
           name: unit-results
@@ -77,6 +80,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -97,7 +102,7 @@ jobs:
         run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}/2
 
       - name: Upload browser diagnostics
-        if: ${{ !cancelled() && !env.ACT }}
+        if: ${{ !cancelled() && env.ACT != 'true' }}
         uses: actions/upload-artifact@v5
         with:
           name: playwright-${{ matrix.project }}-shard-${{ matrix.shard }}
@@ -116,9 +121,32 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Build test image
         run: docker build --tag va-automation:test .
 
       - name: Run Chromium smoke suite in container
         run: docker run --rm --env CI=true --env HEADLESS=true va-automation:test npm test -- --project=chromium
+
+  quality-gate:
+    name: Quality gate
+    if: ${{ always() }}
+    needs: [quality, browser, container]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Require all quality jobs to pass
+        run: |
+          if [[ "${{ needs.quality.result }}" != "success" || \
+                "${{ needs.browser.result }}" != "success" || \
+                "${{ needs.container.result }}" != "success" ]]; then
+            echo "Quality gate failed."
+            echo "quality=${{ needs.quality.result }}"
+            echo "browser=${{ needs.browser.result }}"
+            echo "container=${{ needs.container.result }}"
+            exit 1
+          fi
+          echo "Quality gate passed."

@@ -1,973 +1,327 @@
-# 🚀 Playwright Agentic AI DevSecOps Framework
+# Playwright Agentic QA Framework
 
-[![Playwright](https://img.shields.io/badge/Playwright-TypeScript-45ba4b?logo=playwright)](https://playwright.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions)](https://github.com/features/actions)
-[![DevSecOps](https://img.shields.io/badge/DevSecOps-Security%20Gates-red)](https://github.com/MarwanSultan/Playwright-Agentic-AI-DevSecOps)
-[![AI](https://img.shields.io/badge/AI-Agentic%20Architecture-purple)](https://github.com/MarwanSultan/Playwright-Agentic-AI-DevSecOps)
+A TypeScript quality-engineering framework for deterministic Playwright automation, API contract checks, cross-browser validation, container smoke tests, CI quality gates, and optional AI-assisted test development.
 
-> **An enterprise-oriented Playwright quality engineering framework for government and regulated web applications, combining UI automation, API validation, security testing, performance instrumentation, CI/CD quality gates, and an extensible agentic AI architecture.**
+> **Design principle:** deterministic tests make release decisions; AI agents assist with planning, generation, and diagnosis but do not replace validation or human review.
 
----
+## Contents
 
-## 📌 Overview
+- [What this project does](#what-this-project-does)
+- [Architecture](#architecture)
+- [Getting started](#getting-started)
+- [Running the tests](#running-the-tests)
+- [Using the AI agents](#using-the-ai-agents)
+- [Configuration](#configuration)
+- [CI/CD and quality gates](#cicd-and-quality-gates)
+- [Security and safe-use policy](#security-and-safe-use-policy)
+- [Project structure](#project-structure)
+- [Known limitations](#known-limitations)
+- [Contributing](#contributing)
 
-**Playwright-Agentic-AI-DevSecOps** is a TypeScript-based test automation and quality engineering framework designed to demonstrate how modern software testing can be integrated directly into a **CI/CD and DevSecOps lifecycle**.
+## What this project does
 
-The framework uses [Playwright](https://playwright.dev/) as the browser automation engine and is designed around several complementary quality disciplines:
+The implemented automated tests use public, read-only behavior from:
 
-- UI end-to-end automation
-- Cross-browser testing
-- API validation
-- Functional and regression testing
-- Accessibility testing
-- Performance instrumentation
-- Static application security testing
-- Dependency and software composition analysis
-- CI/CD automation
-- Test reporting and diagnostic artifacts
-- AI-assisted quality engineering
-- Agentic orchestration
-- MCP-based tool integration
-- Failure analysis and test optimization
+- **VA.gov** for the primary browser, API, and network-routing examples
+- **IRS.gov** for a configurable navigation smoke test through the `irsPage` fixture
 
-The project uses **IRS.gov** as a public-facing government application test target for demonstrating realistic testing scenarios without requiring access to private systems or sensitive user information.
+Current coverage includes:
 
-The framework is intentionally designed so that AI capabilities can be introduced without making the core test execution dependent on an LLM. **Playwright remains the deterministic execution engine; AI is an orchestration and analysis layer.**
+- Homepage landmarks, headings, navigation, and page titles
+- Public HTTP contracts for the homepage, `robots.txt`, and `sitemap.xml`
+- Network interception and deterministic simulated backend responses
+- Search-input validation and runtime configuration parsing
+- Chromium, Firefox, and WebKit execution
+- Docker-based Chromium smoke testing
 
----
+Tests do not submit credentials, payments, taxpayer information, or other sensitive data.
 
-# 🎯 Project Goals
-
-The primary goals of this project are to demonstrate how a modern QA/SDET organization can combine:
+## Architecture
 
 ```text
-Test Automation
-      +
-API Validation
-      +
-Security Engineering
-      +
-Performance Engineering
-      +
-CI/CD
-      +
-AI-Assisted Quality Engineering
-      +
-Agentic Orchestration
+┌──────────────────────┐
+│ Playwright / Vitest  │  deterministic tests and assertions
+└──────────┬───────────┘
+           │
+┌──────────▼───────────┐
+│ Fixtures and clients │  browser contexts, API contexts, page objects
+└──────────┬───────────┘
+           │
+┌──────────▼───────────┐
+│ Public test targets  │  VA.gov and configurable IRS.gov navigation
+└──────────┬───────────┘
+           │
+┌──────────▼───────────┐
+│ Evidence and gates   │  JUnit, HTML, traces, screenshots, CI decisions
+└──────────────────────┘
+
+Optional development assistance:
+VS Code/CLI → LangChain agent → MCP Playwright/filesystem/Git tools
 ```
 
-into a unified quality engineering workflow.
+The agentic layer is optional. Playwright and unit tests run without an LLM.
 
-The project emphasizes:
+## Getting started
 
-- Shift-left testing
-- Shift-left security
-- Automation-first testing
-- Deterministic test execution
-- Cross-browser validation
-- Evidence-driven failure analysis
-- CI/CD quality gates
-- Risk-based testing
-- Traceability
-- Secure handling of test data
-- AI-assisted engineering rather than AI replacing deterministic tests
+### Prerequisites
 
----
-
-# 🏗️ Architecture
-
-The target architecture is based on a deterministic Playwright execution layer surrounded by automation, security, performance, and AI capabilities.
-
-```text
-                         ┌───────────────────────┐
-                         │        Developer      │
-                         │       / CI Trigger    │
-                         └───────────┬───────────┘
-                                     │
-                                     ▼
-                         ┌───────────────────────┐
-                         │    GitHub Actions     │
-                         │      CI/CD Pipeline   │
-                         └───────────┬───────────┘
-                                     │
-              ┌──────────────────────┼──────────────────────┐
-              │                      │                      │
-              ▼                      ▼                      ▼
-      ┌───────────────┐      ┌───────────────┐      ┌───────────────┐
-      │ Security      │      │ Playwright    │      │ Performance   │
-      │ Gates         │      │ Test Engine   │      │ Validation    │
-      │               │      │               │      │               │
-      │ CodeQL        │      │ UI            │      │ Navigation    │
-      │ Semgrep       │      │ API           │      │ Timing        │
-      │ Dependency    │      │ Cross-browser │      │ Metrics       │
-      │ Audit         │      │ Accessibility │      │ Regression    │
-      └───────┬───────┘      └───────┬───────┘      └───────┬───────┘
-              │                       │                      │
-              └───────────────────────┼──────────────────────┘
-                                      │
-                                      ▼
-                           ┌──────────────────────┐
-                           │   Test Evidence      │
-                           │                      │
-                           │ HTML Reports         │
-                           │ Screenshots          │
-                           │ Traces               │
-                           │ Videos               │
-                           │ Logs                 │
-                           │ Performance Data     │
-                           └──────────┬───────────┘
-                                      │
-                                      ▼
-                           ┌──────────────────────┐
-                           │    AI / Agent Layer  │
-                           │                      │
-                           │ Orchestrator         │
-                           │ Planner              │
-                           │ Test Generator       │
-                           │ Failure Analyzer     │
-                           │ Healer               │
-                           │ Security Auditor     │
-                           │ Optimizer             │
-                           └──────────┬───────────┘
-                                      │
-                                      ▼
-                           ┌──────────────────────┐
-                           │   Quality Gate       │
-                           │                      │
-                           │ PASS → Continue      │
-                           │ FAIL → Block         │
-                           └──────────────────────┘
-```
-
----
-
-# 🤖 Agentic AI Architecture
-
-The AI layer is designed as a **pluggable orchestration layer** rather than replacing deterministic test automation.
-
-The intended workflow is:
-
-```text
-Requirement
-     │
-     ▼
-┌───────────────┐
-│ Orchestrator  │
-└───────┬───────┘
-        │
-        ├──────────────► Planner
-        │
-        ├──────────────► Test Generator
-        │
-        ├──────────────► Failure Analyzer
-        │
-        ├──────────────► Healer
-        │
-        ├──────────────► Security Auditor
-        │
-        └──────────────► Optimizer
-```
-
-### Planner
-
-Converts requirements or test objectives into structured test scenarios.
-
-### Test Generator
-
-Produces candidate Playwright test implementations from structured test cases.
-
-### Failure Analyzer
-
-Analyzes:
-
-- Playwright failures
-- error messages
-- traces
-- screenshots
-- DOM information
-- network failures
-- timing information
-
-and classifies likely root causes.
-
-### Healer
-
-Identifies potentially recoverable automation failures and proposes safer locator or test changes.
-
-AI-generated changes should remain subject to deterministic validation and human review.
-
-### Security Auditor
-
-Analyzes security-related findings and helps classify risk.
-
-### Optimizer
-
-Identifies opportunities to:
-
-- remove redundant tests
-- improve execution time
-- identify flaky tests
-- prioritize high-value tests
-- improve coverage
-
----
-
-# 🔌 MCP Integration
-
-The architecture is designed to support **Model Context Protocol (MCP)** tools for controlled interaction with the testing environment.
-
-Potential tool categories include:
-
-```text
-Playwright Tools
-├── Navigate
-├── Locate
-├── Click
-├── Fill
-├── Screenshot
-└── Inspect
-
-Filesystem Tools
-├── Read
-├── Write
-└── Search
-
-Git Tools
-├── Status
-├── Diff
-└── History
-
-Testing Tools
-├── Run Tests
-├── Inspect Failures
-└── Collect Results
-
-Security Tools
-├── Scan
-└── Analyze Findings
-
-Performance Tools
-├── Collect Metrics
-└── Compare Baselines
-```
-
-The goal is to keep agent interactions **tool-driven, observable, constrained, and auditable**.
-
----
-
-# 🧪 Test Automation
-
-The framework is configured for multi-browser Playwright execution.
-
-Current browser projects include:
-
-- Chromium
-- Firefox
-- WebKit
-
-The Playwright configuration uses:
-
-- Full parallel execution
-- CI retries
-- `forbidOnly` on CI
-- HTML reporting
-- 30-second action timeout
-- 60-second navigation timeout
-- Screenshots on failure
-- Video on first retry
-- Trace on first retry
-- Headless execution
-
-These settings are defined in `playwright.config.ts`.
-
----
-
-# 🧩 Testing Scope
-
-The framework is designed to support multiple testing disciplines.
-
-## Functional Testing
-
-Validates expected application behavior.
-
-Examples:
-
-- Page navigation
-- Search
-- Forms and publications
-- Payment information
-- Contact/help functionality
-- Language switching
-
-## Regression Testing
-
-Protects previously validated functionality against unintended changes.
-
-## Cross-Browser Testing
-
-Tests supported workflows across:
-
-- Chromium
-- Firefox
-- WebKit
-
-## API Testing
-
-The framework is structured to support REST/API validation alongside browser-based testing.
-
-API testing should include:
-
-- HTTP status validation
-- Response validation
-- Schema validation
-- Headers
-- Business rules
-- Negative scenarios
-
-## Accessibility Testing
-
-The test strategy includes:
-
-- Keyboard navigation
-- Focus order
-- Landmarks
-- Form labels
-- Alternative text
-- Accessible controls
-
-## Performance Testing
-
-Performance instrumentation is designed to collect and aggregate timing information for analysis and regression detection.
-
-Potential metrics include:
-
-- Navigation timing
-- Page load duration
-- DOM content loaded
-- Response timing
-- Baseline comparison
-- Regression thresholds
-
-## Security Testing
-
-Security validation is integrated into the CI/CD lifecycle.
-
-Current security-oriented capabilities include:
-
-- CodeQL
-- Semgrep
-- Dependency auditing
-- Security-focused CI workflows
-
-The architecture is designed to support additional controls such as:
-
-- OWASP ZAP
-- Gitleaks
-- OSV scanning
-- Dependabot
-
----
-
-# 🔐 DevSecOps Strategy
-
-Security is treated as part of the software delivery lifecycle rather than a separate activity.
-
-```text
-Developer Commit
-      │
-      ▼
-Dependency Audit
-      │
-      ▼
-SAST
- ├── CodeQL
- └── Semgrep
-      │
-      ▼
-Automated Tests
-      │
-      ├── UI
-      ├── API
-      ├── Accessibility
-      └── Performance
-      │
-      ▼
-Quality Gate
-      │
- ┌────┴────┐
- ▼         ▼
-PASS      FAIL
- │         │
- ▼         ▼
-Continue  Block
-```
-
-The objective is to identify defects and security risks as early as possible.
-
----
-
-# 🔄 CI/CD
-
-GitHub Actions provides automated execution of the quality engineering pipeline.
-
-The pipeline is designed to perform:
-
-1. Repository checkout
-2. Dependency installation
-3. Dependency security validation
-4. Static analysis
-5. Playwright installation
-6. Automated test execution
-7. Performance processing
-8. Report generation
-9. Artifact retention
-10. Quality evaluation
-
-Test execution produces diagnostic artifacts such as:
-
-- HTML reports
-- screenshots
-- traces
-- videos
-- logs
-- performance summaries
-
----
-
-# 📊 Observability and Test Evidence
-
-A failed test should provide enough information for an engineer to diagnose the problem without simply reproducing the failure manually.
-
-The framework therefore uses Playwright's diagnostic capabilities:
-
-```text
-Test Failure
-     │
-     ├── Screenshot
-     │
-     ├── Trace
-     │
-     ├── Video
-     │
-     ├── Console / Logs
-     │
-     └── Performance Data
-```
-
-These artifacts can subsequently be consumed by an AI failure-analysis workflow.
-
----
-
-# 📋 Government Application Test Strategy
-
-The repository includes an IRS-focused test plan covering ten core public-facing scenarios.
-
-The test plan covers:
-
-1. Homepage functionality
-2. Site search
-3. Forms and publications
-4. Payment information
-5. Refund-status navigation
-6. IRS Online Account login navigation
-7. Contact and help resources
-8. Form-number lookup
-9. Accessibility and keyboard navigation
-10. Spanish-language content
-
-Sensitive workflows are intentionally **non-destructive**.
-
-The framework does not require real taxpayer credentials, Social Security numbers, tax records, or other personal information.
-
----
-
-# 📁 Project Structure
-
-```text
-Playwright-Agentic-AI-DevSecOps/
-│
-├── .github/
-│   └── workflows/
-│       ├── playwright.yml
-│       └── semgrep.yml
-│
-├── .vscode/
-│
-├── scripts/
-│   └── aggregate_perf.js
-│
-├── spec/
-│
-├── tests/
-│   ├── ui/
-│   ├── api/
-│   ├── accessibility/
-│   ├── security/
-│   └── performance/
-│
-├── .gitignore
-├── .super-linter.yml
-├── irs_core_test_plan.md
-├── package.json
-├── package-lock.json
-├── playwright.config.ts
-└── README.md
-```
-
-As the agentic layer expands, the recommended architecture is:
-
-```text
-agents/
-├── orchestrator/
-├── planner/
-├── test-generator/
-├── failure-analyzer/
-├── healer/
-├── security-auditor/
-└── optimizer/
-
-chatbot/
-├── agents/
-├── chat/
-├── model/
-├── prompts/
-└── tools/
-```
-
----
-
-# ⚙️ Prerequisites
-
-Recommended environment:
-
-- Node.js 20+
+- Node.js 22.x for CI; Node.js 20+ for local development
 - npm
-- Git
-- VS Code or another TypeScript-compatible IDE
+- Docker for container validation
 - Playwright-supported browsers
+- Python 3 and `uvx` only when using the Git MCP server
+- An OpenAI API key only when using the LangChain assistant
 
-For AI functionality, the selected model provider and required API credentials will depend on the configured AI integration.
-
-**Never commit API keys or other secrets to the repository.**
-
-Use environment variables or a secure secrets-management solution.
-
----
-
-# 🚀 Installation
-
-## 1. Clone the repository
-
-```bash
-git clone https://github.com/MarwanSultan/Playwright-Agentic-AI-DevSecOps.git
-cd Playwright-Agentic-AI-DevSecOps
-```
-
-## 2. Install dependencies
+### Install
 
 ```bash
 npm ci
-```
-
-For local development where the lockfile is intentionally being changed:
-
-```bash
-npm install
-```
-
-## 3. Install Playwright browsers
-
-```bash
 npx playwright install
 ```
 
-On Linux CI environments:
+For Linux CI-style browser dependencies:
 
 ```bash
 npx playwright install --with-deps
 ```
 
----
-
-# ▶️ Running Tests
-
-## Run the complete Playwright suite
+Create local configuration without committing secrets:
 
 ```bash
-npx playwright test
+cp .env.example .env
 ```
 
-## Run Chromium
+Never commit `.env`, `.secrets`, API keys, access tokens, credentials, or authentication state.
+
+## Running the tests
+
+### Standard commands
+
+```bash
+npm test
+npm run test:ui
+npm run test:api
+npm run test:network
+npm run test:unit
+npm run typecheck
+npm run lint
+npm run format:check
+npm run ci:local
+```
+
+### Run a browser project
 
 ```bash
 npx playwright test --project=chromium
-```
-
-## Run Firefox
-
-```bash
 npx playwright test --project=firefox
-```
-
-## Run WebKit
-
-```bash
 npx playwright test --project=webkit
 ```
 
-## Run in headed mode
+### Run the IRS navigation smoke test
 
 ```bash
-npx playwright test --headed
+npx playwright test tests/ui/irs-navigation.spec.ts
 ```
 
-## Debug a test
+### Debug and review evidence
 
 ```bash
 npx playwright test --debug
-```
-
-## Run a specific test
-
-```bash
-npx playwright test tests/example.spec.ts
-```
-
-## Open the HTML report
-
-```bash
 npx playwright show-report
 ```
 
----
+Playwright writes HTML and JUnit reports plus failure screenshots, traces, videos, and result diagnostics under the configured output directories.
 
-# 🔐 Security Scanning
+## Using the AI agents
 
-Security scanning should be performed locally and in CI.
+The repository contains three specialized Playwright custom agents under `.github/agents/`. Use them as a controlled workflow rather than asking one agent to perform the entire lifecycle without checkpoints.
 
-## Semgrep
+### 1. Test planner
+
+Use `playwright-test-planner` when you need to explore an application and create a structured test plan.
+
+Best for:
+
+- Discovering pages, controls, and user journeys
+- Identifying happy paths, edge cases, and validation behavior
+- Defining independent scenarios and expected outcomes
+- Saving a reviewable Markdown test plan
+
+Recommended workflow:
+
+1. Start from a fresh browser state.
+2. Explore only authorized targets.
+3. Capture user-observable behavior, not implementation assumptions.
+4. Include preconditions, steps, expected results, and failure conditions.
+5. Save the plan under `specs/`.
+6. Review the plan before generating code.
+
+### 2. Test generator
+
+Use `playwright-test-generator` to implement one approved scenario at a time.
+
+Best for:
+
+- Converting a plan item into a single Playwright test
+- Reusing fixtures, page objects, and existing project conventions
+- Verifying each step interactively before writing code
+- Producing a test with traceable step comments
+
+Recommended workflow:
+
+1. Provide the plan file, scenario name, test file, and seed file.
+2. Run the generator setup step.
+3. Execute the scenario interactively.
+4. Review the generated log and locator choices.
+5. Write one focused test.
+6. Run that test and the relevant regression subset.
+7. Review the diff before committing.
+
+Generated tests must use stable, user-facing locators and web-first assertions. Do not accept generated code solely because it runs once.
+
+### 3. Test healer
+
+Use `playwright-test-healer` after a Playwright failure.
+
+Best for:
+
+- Reproducing failures
+- Inspecting snapshots, console output, network behavior, and runtime state
+- Classifying locator, assertion, timeout, network, data, or environment failures
+- Applying the smallest safe test change
+- Re-running the failed test and regression coverage
+
+Recommended workflow:
+
+1. Run the affected test or suite.
+2. Debug the first failure, not the final aggregate error.
+3. Inspect the page snapshot and supporting evidence.
+4. Identify the root cause.
+5. Change selectors, synchronization, assertions, or test data only as justified.
+6. Re-run the test after every fix.
+7. Use `test.fixme()` only when the behavior is genuinely blocked and document why.
+
+### Agent safety rules
+
+- Inspect the repository before creating files.
+- Prefer existing fixtures, clients, page objects, and utilities.
+- Never expose or commit secrets.
+- Do not use real personal, taxpayer, payment, or authentication data.
+- Do not perform destructive or unauthorized actions against public systems.
+- Treat agent output as a proposal until deterministic tests and human review confirm it.
+- Do not use `networkidle` or arbitrary `waitForTimeout` calls.
+- Keep generated changes small, reviewable, and traceable to a plan or failure artifact.
+
+### LangChain CLI assistant
+
+The separate CLI assistant uses LangChain, OpenAI, and MCP servers for repository and browser assistance:
 
 ```bash
-semgrep scan
+npm run chat
 ```
 
-## Dependency audit
+The assistant requires:
 
-```bash
-npm audit --audit-level=high
-```
+- `OPENAI_API_KEY`
+- `npx` for the Playwright and filesystem MCP servers
+- `uvx` and `mcp-server-git` for Git MCP access
+- Network access to download or start MCP servers
 
-The CI pipeline is intended to prevent high-severity dependency issues from silently moving through the delivery process.
+The VS Code extension exposes the same chat capability through the registered assistant command when the extension is packaged and activated in VS Code.
 
----
+## Configuration
 
-# 📈 Performance Analysis
+Runtime settings are parsed by `config/environment.ts`.
 
-Performance artifacts can be aggregated using:
+| Variable                      | Purpose                             | Default                     |
+| ----------------------------- | ----------------------------------- | --------------------------- |
+| `BASE_URL`                    | Primary browser base URL            | `https://www.va.gov`        |
+| `API_BASE_URL`                | API request base URL                | `BASE_URL`                  |
+| `IRS_BASE_URL`                | IRS navigation fixture base URL     | `https://www.irs.gov`       |
+| `ENVIRONMENT`                 | `local`, `ci`, `staging`, or `test` | `local` locally, `ci` in CI |
+| `HEADLESS`                    | Browser headless mode               | `true`                      |
+| `WORKERS`                     | Playwright worker count             | framework default           |
+| `RETRIES`                     | Retry count                         | `0` locally, `2` in CI      |
+| `TIMEOUT`                     | Test timeout in milliseconds        | `30000`                     |
+| `SHARD_INDEX` / `SHARD_TOTAL` | Optional Playwright sharding        | unset                       |
+| `OPENAI_API_KEY`              | LangChain assistant authentication  | unset                       |
+| `OPENAI_MODEL`                | OpenAI model name                   | `gpt-5-mini`                |
 
-```bash
-node scripts/aggregate_perf.js
-```
+Use synthetic or public values only. Validate configuration before running tests against a new target.
 
-The performance layer is designed to evolve toward:
+## CI/CD and quality gates
 
-- Baseline comparison
-- p50 metrics
-- p95 metrics
-- p99 metrics
-- Regression thresholds
-- CI quality gates
+### Quality workflow
 
----
+`.github/workflows/playwright.yml` runs on pushes to `main`/`master`, pull requests, and manual dispatch:
 
-# 🧠 AI-Assisted Quality Engineering
+1. Install locked npm dependencies with `npm ci`.
+2. Check formatting, lint, and TypeScript.
+3. Run Vitest unit tests and `npm audit --audit-level=high`.
+4. Run Chromium, Firefox, and WebKit shards.
+5. Build and run the Chromium Docker smoke test.
+6. Enforce the `Quality gate`.
 
-The AI layer is intended to augment, not replace, deterministic automation.
+The quality gate blocks when static checks, browser shards, or the container smoke test do not pass.
 
-A representative workflow is:
+### Security workflows
+
+- `security.yml` builds and scans the container with Trivy and enforces `Security gate`.
+- `codeql.yml` runs CodeQL JavaScript/TypeScript analysis on GitHub-hosted workflows.
+- `gitleaks.yml` scans repository history for secrets.
+- `dependency-review.yml` blocks newly introduced high-severity dependencies on pull requests.
+- Dependabot updates npm, GitHub Actions, and Docker dependencies weekly.
+
+Local `act` runs are useful for checking shell and job behavior. GitHub-native services such as CodeQL reporting and dependency review are authoritative in GitHub Actions.
+
+For release protection, configure branch rules to require the `Quality gate`, `Security gate`, CodeQL, Gitleaks, and dependency-review checks as appropriate for the repository.
+
+## Security and safe-use policy
+
+- Use public or synthetic data only.
+- Never commit secrets, credentials, tokens, or authentication state.
+- Keep CI permissions least-privileged.
+- Do not perform destructive, high-volume, bypass, or unauthorized testing.
+- Treat AI output as untrusted until reviewed and validated.
+- Keep external test targets explicitly authorized.
+- Rotate any credential that is accidentally exposed.
+
+See `.github/SECURITY.md` for vulnerability reporting and scope requirements.
+
+## Project structure
 
 ```text
-Requirement
-    ↓
-AI Planning
-    ↓
-Structured Test Case
-    ↓
-Playwright Test
-    ↓
-Deterministic Execution
-    ↓
-Evidence
-    ↓
-AI Analysis
-    ↓
-Recommendation
-    ↓
-Human / Quality Gate Decision
+agentic/       LangChain agent, model, MCP client, and extension points
+api/           API clients
+chatbot/       CLI and chat orchestration
+config/        Environment parsing
+fixtures/      Playwright browser/API fixtures
+pages/         Page objects
+specs/         Test plans
+tests/         Playwright UI, API, and network tests
+unit/          Vitest unit tests
+utils/         Shared validation utilities
+.github/       Custom agents, CI, security, and dependency automation
 ```
 
-This design helps prevent a common failure mode in AI-based testing systems where an LLM is allowed to make uncontrolled changes to the test suite or application.
-
----
-
-# 🛡️ Security Principles
-
-This project follows several security principles:
-
-### No secrets in source control
-
-API keys, credentials, tokens, and private certificates must never be committed.
-
-### No real taxpayer information
-
-The IRS test scenarios are designed around publicly accessible functionality.
-
-### No destructive authentication testing
-
-Authentication workflows should validate navigation and UI behavior without submitting real credentials.
-
-### Least privilege
-
-CI workflows should use the minimum GitHub permissions necessary.
-
-### Shift-left security
-
-Security analysis occurs during development and CI rather than being postponed until release.
-
-### Auditable automation
-
-AI-generated recommendations should be traceable to the evidence used to generate them.
-
----
-
-# 🎯 Quality Gates
-
-The long-term quality gate is:
-
-```text
-                 QUALITY GATE
-                      │
-       ┌──────────────┼──────────────┐
-       │              │              │
-       ▼              ▼              ▼
- Functional        Security      Performance
-   Tests             Scan           Tests
-       │              │              │
-       └──────────────┼──────────────┘
-                      │
-                Accessibility
-                      │
-                      ▼
-               Release Decision
-```
-
-A release candidate should not proceed when critical quality or security conditions fail.
-
----
-
-# 🧪 Risk-Based Testing
-
-Not every test carries the same business risk.
-
-Tests should therefore be prioritized according to:
-
-```text
-Business Impact
-      ×
-Failure Probability
-      ×
-Security Exposure
-      ×
-User Impact
-```
-
-High-risk workflows receive stronger automation, broader browser coverage, and more extensive diagnostic evidence.
-
----
-
-# 📚 Documentation
-
-Primary documentation includes:
-
-- `README.md` — framework overview and usage
-- `irs_core_test_plan.md` — functional test strategy
-- `playwright.config.ts` — Playwright execution configuration
-- `.github/workflows/` — CI/CD and security automation
-- `scripts/` — supporting automation utilities
-
-Additional architecture documentation should be added as the AI orchestration layer expands.
-
----
-
-# 🔭 Roadmap
-
-## Phase 1 — Core Automation
-
-- [x] Playwright TypeScript foundation
-- [x] Cross-browser execution
-- [x] Parallel execution
-- [x] Retry strategy
-- [x] Screenshots
-- [x] Traces
-- [x] Video capture
-- [x] HTML reporting
-
-## Phase 2 — DevSecOps
-
-- [x] GitHub Actions
-- [x] Dependency auditing
-- [x] CodeQL integration
-- [x] Semgrep integration
-- [ ] Secret scanning
-- [ ] OSV scanning
-- [ ] DAST integration
-- [ ] Unified security quality gate
-
-## Phase 3 — Quality Engineering
-
-- [ ] Expanded API testing
-- [ ] Automated accessibility testing
-- [ ] Performance baselines
-- [ ] p95/p99 metrics
-- [ ] Regression thresholds
-- [ ] Test tagging and selective execution
-- [ ] Requirement-to-test traceability
-
-## Phase 4 — Agentic AI
-
-- [ ] Orchestrator
-- [ ] Planner agent
-- [ ] Test generation agent
-- [ ] Failure-analysis agent
-- [ ] Healing workflow
-- [ ] Security auditor agent
-- [ ] Test optimization agent
-- [ ] Structured AI outputs
-- [ ] Human approval workflow
-
-## Phase 5 — MCP
-
-- [ ] Playwright MCP tools
-- [ ] Filesystem tools
-- [ ] Git tools
-- [ ] Test execution tools
-- [ ] Security analysis tools
-- [ ] Performance analysis tools
-
-## Phase 6 — Enterprise Quality Gates
-
-- [ ] Unified quality-gate engine
-- [ ] Risk scoring
-- [ ] Automated release recommendation
-- [ ] AI-generated test summaries
-- [ ] Historical test analytics
-- [ ] Flaky-test detection
-- [ ] Coverage trend analysis
-
----
-
-# 💡 Design Philosophy
-
-The central design principle is:
-
-> **AI should enhance quality engineering, not replace engineering discipline.**
-
-The framework therefore separates:
-
-```text
-AI Reasoning
-      │
-      ▼
-Decision / Recommendation
-      │
-      ▼
-Deterministic Tool
-      │
-      ▼
-Playwright / Security / Performance
-      │
-      ▼
-Evidence
-      │
-      ▼
-Quality Gate
-```
-
-This provides a balance between the flexibility of AI and the predictability required for enterprise software testing.
-
----
-
-# 🎓 What This Project Demonstrates
-
-This project demonstrates practical experience with:
-
-- Playwright
-- TypeScript
-- End-to-end testing
-- Cross-browser automation
-- CI/CD
-- GitHub Actions
-- DevSecOps
-- SAST
-- Dependency security
-- Test diagnostics
-- Performance engineering
-- Accessibility testing
-- API testing architecture
-- Government application testing
-- AI-assisted quality engineering
-- Agentic architecture
-- MCP-based tool orchestration
-- Risk-based testing
-- Quality gates
-
----
-
-# 👤 Author
-
-**Marwan Sultan**
-
-Senior QA Automation Engineer | SDET | Test Automation Lead | AI Quality Engineering
-
-GitHub:
-https://github.com/MarwanSultan
-
-Project:
-https://github.com/MarwanSultan/Playwright-Agentic-AI-DevSecOps
-
----
-
-# 📜 License
-
-MIT License
-
----
-
-## ⭐ Final Note
-
-This repository is intended to demonstrate how modern **Quality Engineering, DevSecOps, Playwright automation, security engineering, performance validation, and agentic AI** can work together within a CI/CD lifecycle.
-
-The long-term objective is not simply to generate automated tests.
-
-The objective is to build a system that can:
-
-```text
-Understand
-    ↓
-Plan
-    ↓
-Generate
-    ↓
-Execute
-    ↓
-Analyze
-    ↓
-Secure
-    ↓
-Optimize
-    ↓
-Validate
-```
-
-while maintaining deterministic execution, auditable evidence, and explicit quality gates.
+## Known limitations
+
+- The implemented tests target VA.gov plus the IRS navigation smoke test; broader government-application scenarios in `TEST_PLAN.md` are not all automated.
+- Dedicated accessibility suites, performance baselines, and advanced business-rule API testing are not currently implemented.
+- Public-site tests depend on external network availability and site behavior.
+- The local agent tool modules and memory layer are extension points, not complete standalone implementations.
+- The assistant is optional and must not replace deterministic test execution or human approval.
+
+## Contributing
+
+1. Create a focused branch.
+2. Update or add a test before changing behavior where practical.
+3. Reuse existing fixtures and page objects.
+4. Run formatting, lint, type-check, unit tests, and the relevant Playwright project.
+5. Review traces and reports for failures rather than relying on retries.
+6. Keep secrets and generated artifacts out of commits.
+7. Submit a focused pull request describing behavior, evidence, and any residual risk.
+
+## License
+
+MIT License.

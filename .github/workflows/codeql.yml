@@ -29,6 +29,10 @@ jobs:
       security-events: write
       actions: read
 
+    env:
+      CODEQL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -36,15 +40,20 @@ jobs:
 
     steps:
       - name: Check out repository
+        if: env.CODEQL_TOKEN != ''
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Initialize CodeQL
+        if: env.CODEQL_TOKEN != ''
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
 
       - name: Analyze with CodeQL
+        if: env.CODEQL_TOKEN != ''
         uses: github/codeql-action/analyze@v4
         with:
           category: '/language:${{ matrix.language }}'

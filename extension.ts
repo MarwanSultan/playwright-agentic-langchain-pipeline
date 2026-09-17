@@ -68,10 +68,15 @@ export function deactivate(): void {
 }
 
 function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+  // The webview has scripts disabled; this complete entity mapping keeps the
+  // agent response as text inside the <pre> element.
+  const entities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+
+  return value.replace(/[&<>"']/g, (character) => entities[character] ?? character);
 }

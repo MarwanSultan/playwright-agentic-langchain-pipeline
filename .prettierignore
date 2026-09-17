@@ -1,0 +1,15 @@
+node_modules/
+.venv/
+.venv-semgrep/
+.git/
+playwright-report/
+test-results/
+coverage/
+dist/
+build/
+blob-report/
+act.log
+.secrets
+.env
+.env.*
+!.env.example

@@ -29,15 +29,12 @@ Please do not include real credentials, API keys, access tokens, passwords, or o
 This project uses multiple security controls, including:
 
 - GitHub CodeQL
-- Semgrep
 - Gitleaks
 - GitHub Secret Scanning and Push Protection
 - GitHub Dependency Review
 - Dependabot
 - `npm audit`
 - Trivy container scanning
-- Snyk dependency scanning when enabled
-- OWASP ZAP authorized baseline scanning
 
 Security checks are integrated into the CI/CD pipeline where appropriate.
 

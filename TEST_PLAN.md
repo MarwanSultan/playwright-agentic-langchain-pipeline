@@ -1,899 +1,292 @@
-# IRS.gov Core Application Test Plan
+# Quality Engineering Test Plan
 
-## 1. Document Information
+## 1. Document control
 
-| Attribute              | Value                                                                 |
-| ---------------------- | --------------------------------------------------------------------- |
-| Project                | Playwright Agentic AI DevSecOps                                       |
-| Application Under Test | IRS.gov                                                               |
-| Application URL        | https://www.irs.gov                                                   |
-| Test Framework         | Playwright                                                            |
-| Language               | TypeScript                                                            |
-| Test Type              | UI / Functional / Regression / Accessibility / Performance / Security |
-| Execution              | Local and GitHub Actions CI/CD                                        |
-| Browser Coverage       | Chromium / Firefox / WebKit                                           |
-| Environment            | Public-facing production website                                      |
-| Test Data              | Public / synthetic / non-sensitive                                    |
-| Authentication         | Non-destructive validation only                                       |
-| Primary Objective      | Validate critical public-facing IRS.gov functionality                 |
+| Attribute          | Value                                                       |
+| ------------------ | ----------------------------------------------------------- |
+| Project            | Playwright Agentic QA Framework                             |
+| Primary target     | VA.gov public, read-only behavior                           |
+| Secondary target   | IRS.gov navigation smoke test                               |
+| Framework          | Playwright Test and Vitest                                  |
+| Language           | TypeScript                                                  |
+| Browser matrix     | Chromium, Firefox, WebKit                                   |
+| Execution          | Local, Docker, GitHub Actions, and optional `act` emulation |
+| Test data          | Public or synthetic only                                    |
+| Authentication     | Non-destructive navigation only                             |
+| Decision authority | Deterministic test and security gates                       |
+| AI role            | Planning, generation, diagnosis, and recommendations only   |
 
----
+This document describes the current executable coverage and separates planned coverage from implemented coverage.
 
-# 2. Purpose
+## 2. Objectives
 
-The purpose of this test plan is to validate the most important public-facing functionality of **IRS.gov** using an automation-first quality engineering approach.
+The framework is intended to provide repeatable, observable, and reviewable quality signals for public government websites:
 
-The test plan is designed to demonstrate:
+- Validate critical read-only browser behavior.
+- Validate safe public HTTP contracts.
+- Exercise deterministic network failure and response scenarios.
+- Detect configuration, lint, type, unit, dependency, and container issues early.
+- Provide cross-browser evidence for supported workflows.
+- Preserve artifacts required for diagnosis.
+- Use AI only as an assistive layer with human approval and deterministic verification.
 
-- Functional correctness
-- Regression protection
-- Cross-browser compatibility
-- Accessibility
-- Performance awareness
-- Security-conscious testing
-- CI/CD integration
-- Test traceability
-- Risk-based prioritization
-- AI-assisted failure analysis
+## 3. Scope
 
-The application under test is a publicly accessible government website. Testing must therefore remain **non-destructive and respectful of production systems**.
+### 3.1 Implemented scope
 
----
+#### VA.gov browser coverage
 
-# 3. Scope
+- Navigate to the configured `BASE_URL`.
+- Verify page title.
+- Verify a primary navigation landmark.
+- Verify a visible heading.
+- Verify the main content landmark.
+- Verify a navigable primary-navigation link.
 
-## 3.1 In Scope
+Automation: `tests/ui/homepage.spec.ts` and `pages/home.page.ts`.
 
-The following functionality is included:
+#### IRS.gov navigation coverage
 
-1. Homepage
-2. Site search
-3. Forms and publications
-4. Payment information
-5. Refund-status navigation
-6. IRS Online Account login navigation
-7. Contact and help resources
-8. Form-number lookup
-9. Accessibility and keyboard navigation
-10. Spanish-language content
-11. Cross-browser compatibility
-12. Basic performance instrumentation
-13. Security-oriented validation
-14. CI/CD execution and reporting
+- Navigate to the configured `IRS_BASE_URL`.
+- Verify successful navigation.
+- Verify the URL origin.
+- Verify an IRS/Internal Revenue Service page title.
 
----
+Automation: `tests/ui/irs-navigation.spec.ts` and the `irsPage` fixture in `fixtures/test.ts`.
 
-## 3.2 Out of Scope
+#### Public HTTP contract coverage
 
-The following activities are explicitly excluded:
+- Read the configured homepage.
+- Read `robots.txt`.
+- Read `sitemap.xml`.
+- Verify expected status and content types.
+- Verify an unknown path returns a client error.
 
-- Submitting real taxpayer information
-- Using real Social Security numbers
-- Using real ITINs
-- Using real tax-account credentials
-- Submitting real tax payments
-- Modifying taxpayer records
-- Attempting to bypass authentication
-- Exploiting production vulnerabilities
-- Denial-of-service testing
-- High-volume load testing against IRS.gov
-- Destructive security testing
-- Unauthorized access attempts
+Automation: `tests/api/public-site.spec.ts` and `api/clients/public-site.client.ts`.
 
----
+#### Network behavior coverage
 
-# 4. Testing Strategy
+- Fulfill a deterministic API response.
+- Abort a selected request.
+- Continue a navigation request with a diagnostic header.
+- Fulfill a deterministic 503 response.
+- Inspect response status and content type.
 
-The framework follows a layered quality engineering strategy.
+Automation: `tests/network/routing.spec.ts`.
 
-```text
-                 IRS.gov
-                    │
-       ┌────────────┼────────────┐
-       │            │            │
-       ▼            ▼            ▼
- Functional      Accessibility  Security
-       │            │            │
-       └────────────┼────────────┘
-                    │
-                    ▼
-               Performance
-                    │
-                    ▼
-              Cross-Browser
-                    │
-                    ▼
-                CI/CD Gate
-```
+#### Unit coverage
 
-Testing is prioritized according to business impact and user risk.
+- Runtime URL, boolean, integer, environment, retry, and sharding parsing.
+- Search input validation, empty values, whitespace, and maximum length.
 
----
+Automation: `unit/environment.spec.ts` and `unit/search-input.spec.ts`.
 
-# 5. Risk Classification
+### 3.2 Planned scope
 
-| Priority | Definition                                         |
-| -------- | -------------------------------------------------- |
-| P0       | Critical functionality or release-blocking failure |
-| P1       | High-impact user functionality                     |
-| P2       | Important but non-critical functionality           |
-| P3       | Lower-risk or informational functionality          |
+The following capabilities are documented as future extensions and are not currently release coverage:
 
-Risk is determined using:
+- Dedicated accessibility assertions.
+- Performance baselines and percentile thresholds.
+- Expanded business-rule API validation.
+- IRS form, payment, refund, account, localization, and contact workflows.
+- Automated requirement-to-test traceability.
+- AI failure classification and self-healing patches.
+- Historical flake-rate and coverage analytics.
+
+Planned scenarios must not be reported as passing until executable tests exist and are included in CI.
+
+### 3.3 Out of scope
+
+- Real credentials, taxpayer data, SSNs, ITINs, passwords, payment data, or tax records.
+- Authentication bypass, brute force, privilege escalation, or unauthorized access.
+- Destructive transactions or record modification.
+- Denial-of-service or high-volume load testing against public production sites.
+- Automated merging of AI-generated code without human review.
+
+## 4. Quality model
 
 ```text
-Risk = Business Impact × User Impact × Failure Probability
+Requirement
+    ↓
+Test design
+    ↓
+Deterministic Playwright/Vitest test
+    ↓
+Execution evidence
+    ↓
+Quality and security gates
+    ↓
+Human release decision
 ```
 
----
+The framework follows these engineering principles:
 
-# 6. Test Environment
+- Tests validate user-observable behavior rather than implementation details.
+- Fixtures establish state consistently and clean up owned resources.
+- Tests are independent and safe to retry.
+- User-facing locators and web-first assertions are preferred.
+- External-site tests remain read-only and rate-conscious.
+- A retry is evidence for investigation, not proof of health.
+- AI recommendations are untrusted until validated.
 
-## Browser Matrix
+## 5. Risk model
 
-| Browser  | Priority | Purpose                  |
-| -------- | -------: | ------------------------ |
-| Chromium |       P0 | Primary browser          |
-| Firefox  |       P1 | Cross-browser validation |
-| WebKit   |       P1 | Safari-engine validation |
-
-The current Playwright configuration defines Chromium, Firefox, and WebKit projects.
-
----
-
-# 7. Test Data Strategy
-
-Only public or synthetic information may be used.
-
-## Approved Test Data
-
-Examples:
-
-- Public search terms
-- Public IRS form numbers
-- Public ZIP codes
-- Public navigation paths
-- Public website content
-
-## Prohibited Test Data
-
-Never use:
-
-- Real SSNs
-- Real ITINs
-- Real taxpayer account information
-- Real passwords
-- Real payment information
-- Real tax records
-- Personally identifiable information
-
----
-
-# 8. Functional Test Cases
-
----
-
-## TC-IRS-001 — Homepage Load and Core Elements
-
-**Priority:** P0
-**Risk:** High
-**Type:** Functional / Smoke / Cross-Browser
-
-### Objective
-
-Verify that the IRS.gov homepage loads successfully and exposes the primary navigation and search functionality.
-
-### Preconditions
-
-- Fresh browser context
-- Internet connectivity
-
-### Steps
-
-1. Navigate to `https://www.irs.gov`.
-2. Wait for the page to become stable.
-3. Verify the page title contains `IRS`.
-4. Verify the IRS header/logo is visible.
-5. Verify primary navigation is visible.
-6. Verify the search interface is visible.
-7. Verify primary interactive elements are enabled.
-
-### Expected Results
-
-- HTTP/page navigation succeeds.
-- Page title contains `IRS`.
-- Header is visible.
-- Primary navigation is available.
-- Search functionality is visible.
-- No blocking JavaScript error prevents normal interaction.
-
-### Automation
-
-Recommended:
+Risk is assessed using:
 
 ```text
-tests/ui/irs.homepage.spec.ts
+Risk = business impact × user impact × failure probability
 ```
 
----
-
-# TC-IRS-002 — Site Search
-
-**Priority:** P0
-**Risk:** High
-**Type:** Functional / Regression
-
-### Objective
-
-Verify that users can search IRS.gov and receive relevant results.
-
-### Test Data
-
-```text
-Form 1040
-```
-
-### Steps
-
-1. Open the IRS homepage.
-2. Locate the search control.
-3. Enter `Form 1040`.
-4. Submit the search.
-5. Wait for the results page.
-6. Verify search results are displayed.
-7. Verify the results contain relevant Form 1040 content.
-8. Open an appropriate result.
-
-### Expected Results
-
-- Search executes successfully.
-- Results page loads.
-- Results are relevant to the search term.
-- Form 1040 content can be located.
-- Selected result opens successfully.
-
-### Automation
-
-```text
-tests/ui/irs.search.spec.ts
-```
-
----
-
-# TC-IRS-003 — Forms and Publications
-
-**Priority:** P1
-**Risk:** High
-**Type:** Functional / Regression
-
-### Objective
-
-Verify that users can locate IRS forms and access public form information.
-
-### Test Data
-
-```text
-Form 1040
-```
-
-### Steps
-
-1. Navigate to Forms and Publications.
-2. Search for Form 1040.
-3. Select the appropriate result.
-4. Verify the form details page.
-5. Verify public PDF access.
-6. Open or download the PDF where supported.
-
-### Expected Results
-
-- Forms page loads.
-- Form search works.
-- Form 1040 can be located.
-- Form detail information is displayed.
-- Public PDF can be accessed.
-
-### Automation
-
-```text
-tests/ui/irs.forms.spec.ts
-```
-
----
-
-# TC-IRS-004 — Payment Information
-
-**Priority:** P1
-**Risk:** High
-**Type:** Functional / Navigation
-
-### Objective
-
-Verify that users can access IRS payment information and payment-option guidance.
-
-### Steps
-
-1. Navigate to payment information.
-2. Verify available payment methods are displayed.
-3. Verify informational links are functional.
-4. Open a payment-information page.
-5. Verify security and informational messaging.
-
-### Expected Results
-
-- Payment information is accessible.
-- Payment methods are clearly presented.
-- Links navigate to expected information.
-- No real payment is submitted.
-
-### Automation
-
-```text
-tests/ui/irs.payments.spec.ts
-```
-
----
-
-# TC-IRS-005 — Where's My Refund Navigation and Validation
-
-**Priority:** P0
-**Risk:** Critical
-**Type:** Functional / Validation / Security
-
-### Objective
-
-Verify that users can reach the refund-status tool and that required fields and validation behavior are present.
-
-### Steps
-
-1. Navigate to the refund-status tool.
-2. Verify the page loads.
-3. Verify required input controls are displayed.
-4. Submit the form without entering sensitive information.
-5. Observe client-side validation.
-6. Verify validation messaging.
-
-### Expected Results
-
-- Refund-status application loads.
-- Required fields are visible.
-- Required-field validation works.
-- Validation messages are displayed appropriately.
-
-### Security Restrictions
-
-**Do not enter real SSNs, ITINs, refund amounts, or taxpayer information.**
-
-### Automation
-
-```text
-tests/ui/irs.refund.spec.ts
-```
-
----
-
-# TC-IRS-006 — IRS Online Account Login Navigation
-
-**Priority:** P0
-**Risk:** Critical
-**Type:** Functional / Security
-
-### Objective
-
-Verify that the IRS Online Account navigation reaches the expected authentication workflow.
-
-### Steps
-
-1. Navigate to the IRS Online Account entry point.
-2. Activate the login link.
-3. Observe the resulting authentication page.
-4. Verify that the expected identity-provider/login workflow is presented.
-5. Verify security messaging and login controls.
-
-### Expected Results
-
-- Login navigation works.
-- Expected authentication flow is reached.
-- Login controls are visible.
-- Security messaging is present.
-
-### Security Restrictions
-
-Do not:
-
-- Submit credentials
-- Attempt authentication bypass
-- Brute-force credentials
-- Use real credentials
-- Store authentication secrets in test artifacts
-
-### Automation
-
-```text
-tests/ui/irs.login-navigation.spec.ts
-```
-
----
-
-# TC-IRS-007 — Contact and Help Resources
-
-**Priority:** P1
-**Risk:** Medium/High
-**Type:** Functional
-
-### Objective
-
-Verify that users can access contact, help, and office-location resources.
-
-### Steps
-
-1. Navigate to Contact or Help.
-2. Verify contact information.
-3. Verify available online resources.
-4. Open the office locator.
-5. Enter a public/synthetic ZIP code.
-6. Submit the search.
-
-### Expected Results
-
-- Contact information is visible.
-- Help resources load.
-- Office locator is functional.
-- Search produces appropriate results.
-
-### Automation
-
-```text
-tests/ui/irs.contact.spec.ts
-```
-
----
-
-# TC-IRS-008 — Form Number Lookup
-
-**Priority:** P1
-**Risk:** Medium/High
-**Type:** Functional / Regression
-
-### Objective
-
-Verify direct lookup of a specific IRS form.
-
-### Test Data
-
-```text
-Form 941
-```
-
-### Steps
-
-1. Open the Forms section.
-2. Search for Form 941.
-3. Verify the matching result.
-4. Open the form details.
-5. Verify form metadata and instructions.
-
-### Expected Results
-
-- Form 941 is returned.
-- Result is relevant.
-- Details page loads.
-- Instructions and metadata are accessible.
-
-### Automation
-
-```text
-tests/ui/irs.form-lookup.spec.ts
-```
-
----
-
-# TC-IRS-009 — Accessibility and Keyboard Navigation
-
-**Priority:** P0
-**Risk:** High
-**Type:** Accessibility / Functional
-
-### Objective
-
-Verify baseline accessibility behavior for major public-facing components.
-
-### Validation Areas
-
-- Keyboard navigation
-- Focus order
-- Focus visibility
-- Header landmark
-- Navigation landmark
-- Main landmark
-- Footer landmark
-- Form labels
-- Accessible names
-- Alternative text
-- Interactive control accessibility
-
-### Steps
-
-1. Open the homepage.
-2. Start keyboard navigation using `Tab`.
-3. Record focus order.
-4. Verify interactive elements can be reached.
-5. Verify focus is visible.
-6. Inspect major landmarks.
-7. Inspect images for alternative text.
-8. Inspect form controls for labels/accessibility names.
-
-### Expected Results
-
-- Logical focus order.
-- Keyboard-accessible controls.
-- Visible focus indicator.
-- Major landmarks are present.
-- Images have appropriate alternative text where required.
-- Controls have accessible names.
-
-### Automation
-
-Recommended:
-
-```text
-tests/accessibility/irs.accessibility.spec.ts
-```
-
----
-
-# TC-IRS-010 — Spanish Language Content
-
-**Priority:** P1
-**Risk:** Medium
-**Type:** Functional / Localization
-
-### Objective
-
-Verify that the language-selection mechanism can switch relevant content to Spanish.
-
-### Steps
-
-1. Open the IRS homepage.
-2. Locate the Spanish-language option.
-3. Activate the language switch.
-4. Verify visible content changes.
-5. Navigate to additional Spanish-language content.
-6. Verify navigation continues to work.
-
-### Expected Results
-
-- Spanish content is displayed.
-- Navigation remains functional.
-- Spanish-language pages load successfully.
-- Language selection is persistent where expected.
-
-### Automation
-
-```text
-tests/ui/irs.spanish.spec.ts
-```
-
----
-
-# 9. Negative Testing
-
-Negative tests should be added for critical workflows.
-
-Examples:
-
-| Test                        | Expected Behavior                         |
-| --------------------------- | ----------------------------------------- |
-| Empty search                | Appropriate validation or search behavior |
-| Invalid search term         | Graceful result handling                  |
-| Empty required form fields  | Validation messages                       |
-| Invalid form number         | No incorrect form returned                |
-| Invalid ZIP code            | Appropriate validation                    |
-| Broken navigation parameter | Safe error handling                       |
-| Unsupported input           | No application crash                      |
-
-Negative tests must remain non-destructive.
-
----
-
-# 10. API Testing Strategy
-
-Where public APIs or service endpoints are available and appropriate for testing, API validation should supplement UI automation.
-
-API tests should validate:
-
-### Transport
-
-- HTTP status
-- Response time
-- Headers
-- Content type
-
-### Schema
-
-- Required fields
-- Data types
-- Nested structures
-- Optional fields
-
-### Business Rules
-
-- Valid input
-- Invalid input
-- Boundary conditions
-- Error handling
-
-### Security
-
-- Unexpected input
-- Error-message exposure
-- Sensitive information exposure
-- Authentication/authorization behavior where legally and safely testable
-
-Recommended location:
-
-```text
-tests/api/
-```
-
----
-
-# 11. Performance Testing Strategy
-
-Performance testing should focus on **measurement and regression detection**, not high-volume load generation against a production government website.
-
-Recommended metrics:
-
-- Navigation duration
-- DNS timing where available
-- TCP connection timing where available
-- Response timing
-- DOM Content Loaded
-- Load Event
-- Resource timing
-- Total measured duration
-
-Recommended statistical metrics:
-
-```text
-p50
-p75
-p95
-p99
-```
-
-### Performance Quality Gate
-
-Example:
-
-```text
-Current p95
-      │
-      ▼
-Compare to Baseline
-      │
-      ▼
-Regression %
-      │
-      ▼
-Threshold
-      │
- ┌────┴────┐
- ▼         ▼
-PASS      FAIL
-```
-
-Example threshold:
-
-```text
-Performance regression > 5%
-        ↓
-      FAIL
-```
-
-The exact threshold should be configurable rather than hard-coded.
-
----
-
-# 12. Security Testing Strategy
-
-Security testing must remain within authorized and non-destructive boundaries.
-
-## Static Analysis
-
-Recommended tools:
-
-- CodeQL
-- Semgrep
-
-## Dependency Security
-
-Recommended controls:
-
-- npm audit
-- Dependabot
-- OSV scanning
-
-## Secret Detection
-
-Recommended:
-
-- Gitleaks
-
-## Dynamic Testing
-
-Where authorized:
-
-- OWASP ZAP
-
-### Security Quality Gate
-
-Critical security findings should block the pipeline.
-
-Example:
-
-```text
-Critical Finding
-       ↓
-Security Gate
-       ↓
-BLOCK RELEASE
-```
-
----
-
-# 13. Cross-Browser Strategy
-
-All P0 workflows should be validated against:
-
-```text
-Chromium
-Firefox
-WebKit
-```
-
-P1 tests should run across the full browser matrix where practical.
-
-Lower-priority tests may use Chromium as the default execution browser to control CI duration.
-
----
-
-# 14. Test Tags
-
-Recommended Playwright tags:
-
-```text
-@smoke
-@regression
-@critical
-@accessibility
-@security
-@performance
-@api
-@irs
-```
-
-Examples:
-
-```bash
-npx playwright test --grep @smoke
-```
-
-```bash
-npx playwright test --grep @critical
-```
-
-```bash
-npx playwright test --grep @accessibility
-```
-
----
-
-# 15. Test Execution Strategy
-
-## Pull Request
+| Priority | Definition                             | Current examples                                                    |
+| -------- | -------------------------------------- | ------------------------------------------------------------------- |
+| P0       | Release-blocking or critical user path | Configured homepage, core HTTP availability, quality/security gates |
+| P1       | Important user or platform behavior    | Cross-browser coverage, IRS navigation, public metadata contracts   |
+| P2       | Useful supporting behavior             | Mocked dependency behavior, secondary validation paths              |
+| P3       | Informational or exploratory coverage  | Future optimization and analytics scenarios                         |
+
+## 6. Test data and environment controls
+
+### Approved data
+
+- Public URLs.
+- Public page content.
+- Synthetic search values.
+- Synthetic API responses.
+- Public or synthetic ZIP codes where future scenarios require them.
+
+### Prohibited data
+
+- Real personally identifiable information.
+- Real authentication state.
+- Real taxpayer, payment, or tax-account data.
+- Secrets in source files, test artifacts, screenshots, traces, or logs.
+
+### Runtime environments
+
+| Environment | Purpose                                | Required controls                                     |
+| ----------- | -------------------------------------- | ----------------------------------------------------- |
+| Local       | Development and focused tests          | `.env`, safe public targets, no secrets in commits    |
+| CI          | Pull-request and branch validation     | `CI=true`, headless execution, locked dependencies    |
+| Docker      | Reproducible Chromium smoke validation | `.dockerignore`, non-root runtime user                |
+| `act`       | Local workflow approximation           | Treat GitHub-native integrations as non-authoritative |
+
+Primary configuration is parsed by `config/environment.ts`. Defaults are VA.gov and IRS.gov; override with `BASE_URL`, `API_BASE_URL`, and `IRS_BASE_URL` when authorized.
+
+## 7. Test cases and mapping
+
+| ID         | Scenario                                | Type                      | Priority | Automation                        |
+| ---------- | --------------------------------------- | ------------------------- | -------- | --------------------------------- |
+| VA-UI-001  | Configured VA.gov homepage loads        | UI/smoke                  | P0       | `tests/ui/homepage.spec.ts`       |
+| VA-UI-002  | VA.gov primary navigation is visible    | UI/accessibility baseline | P0       | `tests/ui/homepage.spec.ts`       |
+| VA-UI-003  | VA.gov heading and main landmarks exist | UI/accessibility baseline | P0       | `tests/ui/homepage.spec.ts`       |
+| IRS-UI-001 | Configured IRS.gov homepage navigation  | UI/smoke                  | P1       | `tests/ui/irs-navigation.spec.ts` |
+| API-001    | Homepage HTTP contract                  | API                       | P0       | `tests/api/public-site.spec.ts`   |
+| API-002    | Robots policy is exposed                | API                       | P1       | `tests/api/public-site.spec.ts`   |
+| API-003    | Sitemap document is exposed             | API                       | P1       | `tests/api/public-site.spec.ts`   |
+| API-004    | Unknown path returns client error       | API/negative              | P1       | `tests/api/public-site.spec.ts`   |
+| NET-001    | Mocked successful dependency            | Network                   | P1       | `tests/network/routing.spec.ts`   |
+| NET-002    | Aborted dependency is surfaced          | Network/negative          | P1       | `tests/network/routing.spec.ts`   |
+| NET-003    | Navigation diagnostic header is added   | Network                   | P2       | `tests/network/routing.spec.ts`   |
+| NET-004    | Mocked backend error is handled         | Network/negative          | P1       | `tests/network/routing.spec.ts`   |
+| UNIT-001   | Runtime configuration is validated      | Unit                      | P0       | `unit/environment.spec.ts`        |
+| UNIT-002   | Search input rules are validated        | Unit                      | P1       | `unit/search-input.spec.ts`       |
+
+## 8. Execution strategy
+
+### Pull request
 
 Run:
 
-```text
-Smoke
-Critical Functional
-Security
-Type Checking
-Linting
+- Formatting check
+- ESLint
+- TypeScript type-check
+- Vitest unit tests
+- High-severity npm audit
+- Required browser matrix jobs
+- Docker Chromium smoke test
+- Container Trivy scan
+- Required repository security checks configured in branch protection
+
+### Main branch
+
+Run the full quality and security workflows, retain diagnostic artifacts, and require the aggregate `Quality gate` and `Security gate` checks.
+
+### Local focused execution
+
+```bash
+npx playwright test tests/ui/irs-navigation.spec.ts
+npx playwright test tests/ui/homepage.spec.ts
+npx playwright test tests/api/public-site.spec.ts
+npx playwright test tests/network/routing.spec.ts
+npm run test:unit
 ```
 
-## Main Branch
+## 9. CI/CD quality gates
 
-Run:
+### Quality gate
 
-```text
-Full Regression
-Cross-Browser
-Security
-Accessibility
-Performance
-```
+`.github/workflows/playwright.yml` requires all of the following:
 
-## Scheduled/Nightly
+- Static quality and unit tests pass.
+- Chromium, Firefox, and WebKit browser shards pass.
+- Docker Chromium smoke test passes.
 
-Run:
+### Security gate
 
-```text
-Full Regression
-Cross-Browser
-Security
-Performance
-Extended Analysis
-```
+`.github/workflows/security.yml` requires the Trivy container scan to pass for configured HIGH and CRITICAL findings.
 
----
+Additional security workflows provide independent controls:
 
-# 16. CI/CD Quality Gate
+- CodeQL analysis.
+- Gitleaks secret scanning.
+- Pull-request dependency review.
+- Dependabot update automation.
 
-The target CI quality gate is:
+The aggregate gates are intentionally strict. A gate failure is a summary; investigate the first upstream job failure rather than weakening the gate.
 
-```text
-                 CI PIPELINE
-                     │
-      ┌──────────────┼───────────────┐
-      ▼              ▼               ▼
- Functional       Security       Performance
-    Tests           Scan            Tests
-      │              │               │
-      └──────────────┼───────────────┘
-                     ▼
-               Accessibility
-                     │
-                     ▼
-               Quality Gate
-                     │
-              ┌──────┴──────┐
-              ▼             ▼
-            PASS           FAIL
-              │             │
-              ▼             ▼
-          Continue        Block
-```
+## 10. Evidence and observability
 
----
+A failed test should provide as much of the following as applicable:
 
-# 17. AI-Assisted Test Analysis
+- Test and case ID.
+- Browser and environment.
+- Error and stack trace.
+- Screenshot.
+- Playwright trace.
+- Video on configured retries.
+- Console and network evidence.
+- JUnit result.
+- Commit and workflow run.
 
-The test framework may use AI to analyze deterministic test evidence.
+Reports are generated by Playwright and Vitest. CI uploads browser and unit diagnostics when supported by the runner.
 
-Potential AI inputs:
+## 11. AI-assisted workflow
 
-- Test name
-- Error message
-- Stack trace
-- Screenshot
-- Playwright trace
-- DOM snapshot
-- Console errors
-- Network failures
-- Timing data
+AI agents may support three controlled stages:
 
-Potential AI output:
+### Planning
 
-```json
-{
-  "classification": "locator_failure",
-  "confidence": 0.94,
-  "rootCause": "Expected element was not found",
-  "recommendedAction": "Review locator",
-  "healable": true,
-  "risk": "low"
-}
-```
+`playwright-test-planner` explores an authorized target and writes a reviewable scenario plan under `specs/`.
 
-AI output must be treated as a recommendation unless explicitly validated.
+### Generation
 
----
+`playwright-test-generator` implements one approved scenario, verifies interactions, uses project fixtures, and writes one focused test.
 
-# 18. Failure Classification
+### Healing
 
-Failures should be classified into categories such as:
+`playwright-test-healer` reproduces the first failure, inspects evidence, proposes the smallest fix, and reruns regression coverage.
+
+AI-generated changes require:
+
+1. Source and existing-pattern inspection.
+2. Human review of the proposed diff.
+3. Deterministic test execution.
+4. Security and quality gate validation.
+5. Explicit approval before merge.
+
+## 12. Failure classification
+
+Classify failures as one of:
 
 ```text
 LOCATOR_FAILURE
@@ -906,383 +299,72 @@ DATA_FAILURE
 AUTHENTICATION_FAILURE
 SECURITY_FAILURE
 PERFORMANCE_REGRESSION
+FLAKY_TEST
 UNKNOWN
 ```
 
-This classification enables better reporting and automated triage.
+The first failing action is the primary diagnostic signal. Aggregate gate failures are not root causes.
 
----
+## 13. Defect and flake management
 
-# 19. Self-Healing Safety Model
+Every defect should include:
 
-Automated healing must not directly modify production systems.
+- Summary and severity.
+- Environment, browser, commit, and workflow.
+- Test case ID.
+- Reproduction steps.
+- Expected and actual results.
+- Screenshot, trace, video, and logs where available.
+- Root-cause classification.
+- Remediation and regression evidence.
 
-Recommended workflow:
-
-```text
-Test Failure
-     ↓
-AI Analysis
-     ↓
-Candidate Fix
-     ↓
-Generate Patch
-     ↓
-Run Validation
-     ↓
-Run Regression
-     ↓
-Human Approval
-     ↓
-Merge
-```
-
-A candidate healing change should not automatically be considered correct simply because an LLM generated it.
-
----
-
-# 20. Test Evidence
-
-Every failed automated test should attempt to provide:
-
-- Test name
-- Browser
-- Environment
-- Error message
-- Stack trace
-- Screenshot
-- Trace
-- Video where configured
-- Console information
-- Network information where relevant
-- Performance metrics where applicable
-
-The objective is to make failures **diagnosable and auditable**.
-
----
-
-# 21. Traceability Matrix
-
-| Requirement                   | Test Case  | Automation                         | Priority |
-| ----------------------------- | ---------- | ---------------------------------- | -------- |
-| Homepage available            | TC-IRS-001 | Playwright                         | P0       |
-| Search available              | TC-IRS-002 | Playwright                         | P0       |
-| Forms accessible              | TC-IRS-003 | Playwright                         | P1       |
-| Payment information available | TC-IRS-004 | Playwright                         | P1       |
-| Refund tool accessible        | TC-IRS-005 | Playwright                         | P0       |
-| Online account navigation     | TC-IRS-006 | Playwright                         | P0       |
-| Help/contact available        | TC-IRS-007 | Playwright                         | P1       |
-| Form lookup available         | TC-IRS-008 | Playwright                         | P1       |
-| Accessibility baseline        | TC-IRS-009 | Playwright + Accessibility tooling | P0       |
-| Spanish content               | TC-IRS-010 | Playwright                         | P1       |
-
----
-
-# 22. Entry Criteria
-
-Testing may begin when:
-
-- Application is reachable.
-- Test environment is available.
-- Required automation dependencies are installed.
-- Test data is available.
-- CI environment is operational.
-- No known blocking infrastructure issue exists.
-
----
-
-# 23. Exit Criteria
-
-The test cycle is considered complete when:
-
-- All P0 tests pass.
-- No unresolved critical security findings exist.
-- Required P1 regression tests meet acceptance criteria.
-- Accessibility tests meet defined baseline requirements.
-- Performance remains within configured thresholds.
-- Test evidence has been generated.
-- Known failures are documented.
-- Quality gate status is determined.
-
----
-
-# 24. Defect Severity
-
-| Severity | Description                                                                        |
-| -------- | ---------------------------------------------------------------------------------- |
-| Critical | Application unavailable, security-critical failure, or major user workflow blocked |
-| High     | Major functionality unavailable or incorrect                                       |
-| Medium   | Significant but non-blocking functionality issue                                   |
-| Low      | Minor functional, visual, or documentation issue                                   |
-
----
-
-# 25. Defect Evidence Requirements
-
-Each defect should contain:
-
-```text
-Title
-Environment
-Browser
-Test Case ID
-Steps to Reproduce
-Expected Result
-Actual Result
-Severity
-Priority
-Screenshot
-Trace
-Video, if available
-Console/Network evidence
-Build/Commit
-```
-
----
-
-# 26. Reporting
-
-The framework should produce:
-
-- Playwright HTML report
-- Screenshots
-- Traces
-- Videos on retry
-- CI logs
-- Security reports
-- Dependency audit reports
-- Performance summaries
-- AI-assisted failure analysis where enabled
-
----
-
-# 27. Automation Mapping
-
-Recommended file structure:
-
-```text
-tests/
-│
-├── ui/
-│   ├── irs.homepage.spec.ts
-│   ├── irs.search.spec.ts
-│   ├── irs.forms.spec.ts
-│   ├── irs.payments.spec.ts
-│   ├── irs.refund.spec.ts
-│   ├── irs.login-navigation.spec.ts
-│   ├── irs.contact.spec.ts
-│   ├── irs.form-lookup.spec.ts
-│   └── irs.spanish.spec.ts
-│
-├── accessibility/
-│   └── irs.accessibility.spec.ts
-│
-├── api/
-│
-├── security/
-│
-└── performance/
-```
-
----
-
-# 28. Test Maintenance
-
-Tests should follow these principles:
-
-### Prefer user-facing locators
-
-Use:
-
-```text
-getByRole()
-getByLabel()
-getByText()
-```
-
-before brittle CSS/XPath selectors.
-
-### Avoid unnecessary waits
-
-Do not rely on arbitrary:
-
-```text
-waitForTimeout()
-```
-
-when Playwright's auto-waiting or explicit state assertions can be used.
-
-### Keep tests independent
-
-Each test should establish its own required state.
-
-### Avoid sensitive state
-
-Do not persist sensitive authentication state.
-
-### Keep assertions meaningful
-
-Assertions should validate business behavior rather than implementation details.
-
----
-
-# 29. Flaky Test Management
-
-Flaky tests should be classified separately from genuine application failures.
-
-Recommended classification:
-
-```text
-Application Defect
-Automation Defect
-Environment Failure
-Data Failure
-Flaky Test
-Unknown
-```
-
-A test that passes only after retries should be investigated rather than permanently accepted as healthy.
+Tests that pass only after retries should be tracked as flaky until the cause is understood.
 
 Recommended metrics:
 
 ```text
-Retry Rate
-Flake Rate
-Failure Rate
-Mean Time to Resolution
+Failure rate
+Retry rate
+Flake rate
+Mean time to resolution
+Time to diagnose
 ```
 
----
+## 14. Entry and exit criteria
 
-# 30. AI Test Optimization
+### Entry criteria
 
-Once the agentic layer is implemented, AI may be used to analyze:
+- Target is reachable and explicitly authorized.
+- Dependencies and required browsers are installed.
+- Configuration has been validated.
+- Test data is public or synthetic.
+- CI runner and Docker prerequisites are available.
 
-- Duplicate test coverage
-- Low-value tests
-- Repeated failures
-- Flaky tests
-- Execution duration
-- Coverage gaps
-- Browser-specific failures
+### Exit criteria
 
-The optimizer should generate recommendations such as:
+- All required P0 tests pass.
+- Quality and security gates pass.
+- No unresolved critical security findings exist.
+- Required P1 coverage meets acceptance criteria.
+- Evidence is retained and failures are documented.
+- Known limitations and residual risks are recorded.
 
-```text
-Test A and Test B validate the same workflow.
+## 15. Maintenance
 
-Recommendation:
-Consolidate common setup and retain separate assertions.
-```
+- Prefer `getByRole`, `getByLabel`, and other user-facing locators.
+- Avoid brittle CSS/XPath selectors unless necessary.
+- Avoid arbitrary sleeps and discouraged synchronization APIs.
+- Keep tests independent and read-only.
+- Reuse fixtures, page objects, API clients, and validation utilities.
+- Keep test plans, README documentation, and executable coverage aligned.
+- Review dependency, action, and container updates through automated checks.
 
-Recommendations must be validated before modifying the test suite.
+## 16. Acceptance criteria
 
----
+The framework is considered healthy when:
 
-# 31. Acceptance Criteria
-
-The framework will be considered successful when it can demonstrate:
-
-### Functional
-
-- Core IRS workflows execute successfully.
-- Critical workflows have automated regression coverage.
-
-### Cross-Browser
-
-- P0 workflows execute across supported browsers.
-
-### Accessibility
-
-- Baseline accessibility checks execute automatically.
-
-### Security
-
-- Security scans execute as part of CI.
-- Critical findings can block the pipeline.
-
-### Performance
-
-- Performance metrics are collected.
-- Regression thresholds can be evaluated.
-
-### CI/CD
-
-- Tests execute automatically on configured GitHub events.
-- Test evidence is retained as CI artifacts.
-
-### AI
-
-- AI can analyze structured test evidence.
-- AI recommendations are deterministic-tool validated.
-- AI does not bypass established security or quality gates.
-
----
-
-# 32. Final Quality Engineering Model
-
-The completed framework should follow this lifecycle:
-
-```text
-                    REQUIREMENT
-                         │
-                         ▼
-                  TEST STRATEGY
-                         │
-                         ▼
-                   TEST DESIGN
-                         │
-                         ▼
-                  AI ASSISTANCE
-                         │
-                         ▼
-                 PLAYWRIGHT TEST
-                         │
-                         ▼
-                    EXECUTION
-                         │
-        ┌────────────────┼────────────────┐
-        ▼                ▼                ▼
-   Functional        Security        Performance
-        │                │                │
-        └────────────────┼────────────────┘
-                         ▼
-                    TEST EVIDENCE
-                         │
-                         ▼
-                  AI FAILURE ANALYSIS
-                         │
-                         ▼
-                  QUALITY ASSESSMENT
-                         │
-                         ▼
-                    QUALITY GATE
-                         │
-                  ┌──────┴──────┐
-                  ▼             ▼
-                PASS           FAIL
-                  │             │
-                  ▼             ▼
-               RELEASE       INVESTIGATE
-```
-
----
-
-# 33. Test Plan Summary
-
-The objective of this test plan is not simply to prove that individual webpages work.
-
-The objective is to demonstrate a modern **Quality Engineering and DevSecOps lifecycle** in which:
-
-- Requirements drive test design.
-- Playwright provides deterministic browser automation.
-- APIs can be validated alongside UI workflows.
-- Accessibility is treated as a quality attribute.
-- Security is integrated into CI/CD.
-- Performance is measured and compared against baselines.
-- Test evidence is automatically collected.
-- AI assists with planning and failure analysis.
-- Agentic workflows remain controlled and auditable.
-- Quality gates determine whether a change is acceptable.
-
-**The ultimate goal is a reliable, secure, observable, and scalable automated testing system for government and regulated applications.**
+- Deterministic tests run locally and in CI.
+- Browser and container evidence is retained for failures.
+- Quality and security gates make explicit pass/fail decisions.
+- Public targets are exercised safely and non-destructively.
+- AI assistance remains optional, auditable, and subordinate to deterministic validation.

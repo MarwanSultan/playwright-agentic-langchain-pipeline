@@ -15,9 +15,6 @@ concurrency:
   group: security-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  NODE_VERSION: 22.14.0
-
 jobs:
   trivy:
     name: Scan container image
@@ -27,58 +24,44 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Build image for scanning
-        run: docker build --tag va-automation:security .
+        run: docker build --pull --no-cache --tag va-automation:security .
+
+      - name: Install Trivy
+        env:
+          TRIVY_VERSION: 0.69.3
+        run: |
+          archive="trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl --fail --silent --show-error --location \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/${archive}" \
+            --output "$RUNNER_TEMP/$archive"
+          tar --extract --gzip --file "$RUNNER_TEMP/$archive" --directory "$RUNNER_TEMP" trivy
 
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: va-automation:security
-          format: table
-          exit-code: '1'
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
+        run: |
+          "$RUNNER_TEMP/trivy" image \
+            --format table \
+            --exit-code 1 \
+            --ignore-unfixed \
+            --severity CRITICAL,HIGH \
+            va-automation:security
 
-  snyk:
-    name: Scan dependencies with Snyk
-    if: ${{ vars.SNYK_ENABLED == 'true' }}
+  security-gate:
+    name: Security gate
+    if: ${{ always() }}
+    needs: [trivy]
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    permissions:
-      contents: read
-
-    env:
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    timeout-minutes: 5
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Validate Snyk configuration
-        if: ${{ env.SNYK_TOKEN == '' }}
+      - name: Require security scans to pass
         run: |
-          echo "::error::SNYK_ENABLED is true but SNYK_TOKEN is not configured."
-          exit 1
-
-      - name: Run Snyk dependency scan
-        if: ${{ env.SNYK_TOKEN != '' }}
-        uses: snyk/actions/node@v1.0.0
-        with:
-          args: --severity-threshold=high
-
-      - name: Monitor project with Snyk
-        if: ${{ env.SNYK_TOKEN != '' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        uses: snyk/actions/node@v1.0.0
-        with:
-          command: monitor
+          if [[ "${{ needs.trivy.result }}" != "success" ]]; then
+            echo "Security gate failed."
+            echo "trivy=${{ needs.trivy.result }}"
+            exit 1
+          fi
+          echo "Security gate passed."

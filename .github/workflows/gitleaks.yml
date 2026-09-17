@@ -17,11 +17,18 @@ jobs:
         with:
           # Fetches full commit history for a thorough deep scan
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Gitleaks
+        env:
+          GITLEAKS_VERSION: 8.24.3
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl --fail --silent --show-error --location \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}" \
+            --output "$RUNNER_TEMP/$archive"
+          tar --extract --gzip --file "$RUNNER_TEMP/$archive" --directory "$RUNNER_TEMP" gitleaks
 
       - name: Scan repository with Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          # Tells Gitleaks to run a direct tree analysis if git commit data is missing
-          args: --source=. --verbose --no-git
+        run: |
+          "$RUNNER_TEMP/gitleaks" detect --source=. --verbose --redact

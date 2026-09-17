@@ -2,7 +2,9 @@ import { expect, test } from '../../fixtures/test';
 
 test.describe('VA.gov homepage', () => {
   test('loads the configured homepage through the fixture', async ({ homePage, runtimeConfig }) => {
-    await expect(homePage.page).toHaveURL(new RegExp(`^${runtimeConfig.baseUrl}`));
+    await expect(homePage.page).toHaveURL(
+      (url) => url.origin === new URL(runtimeConfig.baseUrl).origin,
+    );
     await expect(homePage.page).toHaveTitle(/VA|Veterans Affairs/i);
   });
 

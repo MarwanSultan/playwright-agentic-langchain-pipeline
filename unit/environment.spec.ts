@@ -8,6 +8,7 @@ describe('loadRuntimeConfig', () => {
 
     expect(config.baseUrl).toBe('https://www.va.gov');
     expect(config.apiBaseUrl).toBe('https://www.va.gov');
+    expect(config.irsBaseUrl).toBe('https://www.irs.gov');
     expect(config.environment).toBe('local');
     expect(config.headless).toBe(true);
     expect(config.retries).toBe(0);
@@ -17,6 +18,7 @@ describe('loadRuntimeConfig', () => {
     const config = loadRuntimeConfig({
       BASE_URL: 'https://test.example/',
       API_BASE_URL: 'https://api.test.example/',
+      IRS_BASE_URL: 'https://irs.test.example/',
       CI: 'true',
       ENVIRONMENT: 'test',
       HEADLESS: 'yes',
@@ -27,6 +29,7 @@ describe('loadRuntimeConfig', () => {
     expect(config).toMatchObject({
       baseUrl: 'https://test.example',
       apiBaseUrl: 'https://api.test.example',
+      irsBaseUrl: 'https://irs.test.example',
       environment: 'test',
       isCi: true,
       headless: true,

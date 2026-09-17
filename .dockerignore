@@ -4,6 +4,10 @@ node_modules
 .env
 .env.*
 !.env.example
+.secrets
+.venv
+.DS_Store
+act.log
 playwright-report
 test-results
 playwright/.cache
