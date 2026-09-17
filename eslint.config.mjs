@@ -5,7 +5,14 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig(
   {
-    ignores: ['node_modules/**', '.venv/**', 'playwright-report/**', 'test-results/**', 'dist/**'],
+    ignores: [
+      'node_modules/**',
+      '.venv/**',
+      '.venv-semgrep/**',
+      'playwright-report/**',
+      'test-results/**',
+      'dist/**',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
