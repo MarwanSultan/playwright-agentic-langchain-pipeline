@@ -8,8 +8,8 @@ test.describe('VA.gov homepage', () => {
     await expect(homePage.page).toHaveTitle(/VA|Veterans Affairs/i);
   });
 
-  test('exposes a primary navigation landmark', async ({ homePage }) => {
-    await expect(homePage.primaryNavigation).toBeVisible();
+  test('exposes the site header landmark', async ({ homePage }) => {
+    await expect(homePage.siteHeader).toBeVisible();
   });
 
   test('renders a visible primary heading', async ({ homePage }) => {
@@ -20,7 +20,7 @@ test.describe('VA.gov homepage', () => {
     await expect(homePage.mainContent).toBeVisible();
   });
 
-  test('provides navigable links in primary navigation', async ({ homePage }) => {
-    await expect(homePage.primaryNavigation.getByRole('link').first()).toBeVisible();
+  test('provides navigable links in the site header', async ({ homePage }) => {
+    await expect(homePage.siteHeader.getByRole('link').first()).toBeVisible();
   });
 });

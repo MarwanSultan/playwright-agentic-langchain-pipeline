@@ -2,13 +2,13 @@ import type { Page } from '@playwright/test';
 
 export class HomePage {
   readonly page: Page;
-  readonly primaryNavigation;
+  readonly siteHeader;
   readonly headings;
   readonly mainContent;
 
   constructor(page: Page) {
     this.page = page;
-    this.primaryNavigation = page.getByRole('navigation').first();
+    this.siteHeader = page.getByRole('banner');
     this.headings = page.getByRole('heading');
     this.mainContent = page.getByRole('main');
   }

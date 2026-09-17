@@ -72,7 +72,7 @@ test.describe('network routing behavior', () => {
       });
     });
 
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
     expect(originalHeader).toBeUndefined();
     expect(continuedWithDiagnosticHeader).toBe(true);

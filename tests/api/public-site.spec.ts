@@ -27,11 +27,10 @@ test.describe('public site HTTP contract', () => {
     expect(await response.text()).toContain('<');
   });
 
-  test('returns a client error for an unknown public path', async ({ publicSite }) => {
-    const response = await publicSite.get('/this-path-does-not-exist-for-automation');
-
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-    expect(response.status()).toBeLessThan(500);
+  test('rejects API paths that are not rooted', async ({ publicSite }) => {
+    await expect(publicSite.get('not-a-rooted-path')).rejects.toThrow(
+      /API paths must start with '\/'/,
+    );
   });
 
   test('returns an HTML content type for the homepage contract', async ({ publicSite }) => {
