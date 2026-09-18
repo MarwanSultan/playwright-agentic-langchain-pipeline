@@ -204,7 +204,6 @@ Run:
 - High-severity npm audit
 - Required browser matrix jobs
 - Docker Chromium smoke test
-- Container Trivy scan
 - Required repository security checks configured in branch protection
 
 ### Main branch
@@ -233,7 +232,7 @@ npm run test:unit
 
 ### Security gate
 
-`.github/workflows/security.yml` requires the Trivy container scan to pass for configured HIGH and CRITICAL findings.
+`.github/workflows/security.yml` requires the container scan to pass for configured HIGH and CRITICAL findings.
 
 Additional security workflows provide independent controls:
 

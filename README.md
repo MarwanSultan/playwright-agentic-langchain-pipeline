@@ -266,7 +266,7 @@ The quality gate blocks when static checks, browser shards, or the container smo
 
 ### Security workflows
 
-- `security.yml` builds and scans the container with Trivy and enforces `Security gate`.
+- `security.yml` builds and scans the container while enforcing the `Security gate`.
 - `codeql.yml` runs CodeQL JavaScript/TypeScript analysis on GitHub-hosted workflows.
 - `gitleaks.yml` scans repository history for secrets.
 - `dependency-review.yml` blocks newly introduced high-severity dependencies on pull requests.

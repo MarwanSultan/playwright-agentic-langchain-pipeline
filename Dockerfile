@@ -4,7 +4,7 @@ FROM mcr.microsoft.com/playwright:v1.63.0-noble
 
 WORKDIR /app
 
-# Refresh the base image's global npm toolchain so Trivy does not scan known
+# Refresh the base image's global npm toolchain
 # vulnerabilities bundled with the older npm version in the Playwright image.
 RUN npm install --global npm@latest
 

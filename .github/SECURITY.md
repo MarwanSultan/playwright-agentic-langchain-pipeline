@@ -34,7 +34,6 @@ This project uses multiple security controls, including:
 - GitHub Dependency Review
 - Dependabot
 - `npm audit`
-- Trivy container scanning
 
 Security checks are integrated into the CI/CD pipeline where appropriate.
 
